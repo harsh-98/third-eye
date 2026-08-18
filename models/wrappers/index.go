@@ -83,6 +83,9 @@ func (w SyncWrapper) GetAdapter(addr string) ds.SyncAdapterI {
 	return w.Adapters.Get(addr)
 }
 func (w SyncWrapper) SetDisabled(disabled bool) {
+	for _, adapter := range w.Adapters.GetAll() {
+		adapter.SetDisabled(disabled)
+	}
 }
 
 func (w *SyncWrapper) AddSyncAdapter(adapter ds.SyncAdapterI) {
@@ -186,8 +189,17 @@ func (SyncWrapper) GetDiscoveredAt() int64 {
 func (SyncWrapper) GetBlockToDisableOn() int64 {
 	return math.MaxInt64
 }
-func (SyncWrapper) IsDisabled() bool {
-	return false
+func (w SyncWrapper) IsDisabled() bool {
+	adapters := w.Adapters.GetAll()
+	if len(adapters) == 0 {
+		return false
+	}
+	for _, adapter := range adapters {
+		if !adapter.IsDisabled() {
+			return false
+		}
+	}
+	return true
 }
 
 func (SyncWrapper) SetBlockToDisableOn(int64) {
